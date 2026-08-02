@@ -28,12 +28,16 @@ This document has been restructured using the **From Abstraction to Implementati
 ### The Five Questions (From Abstraction to Implementation)
 1. **What is the observable symptom?** Queues are exploding, response times are incredibly high, and delay cascades into systemic unresponsiveness and periodic collapse.
 2. **Why is it happening?** Utilization is too close to capacity, leaving no headroom to absorb variability in arrival and service times. This variability compounds nonlinearly.
-3. **What is the control knob?** Headroom / spare capacity (Utilization $ho$).
+3. **What is the control knob?** Headroom / spare capacity (Utilization $
+ho$).
 4. **What is the implementation?** Sizing server clusters/thread pools for tail load instead of average, leaving open blocks in a personal calendar, keeping financial reserves.
 5. **What is the robustness test?** Subject the system to an unexpected 30% spike in request/arrival frequency or variance to verify if queue sizes and latencies remain bounded, or if the system cascades into total failure.
 
 ### Detailed Mechanism & Application
-- **What the Mechanism Is:** In an M/M/1-type queue, expected wait time scales with $ho/(1-ho)$, where $ho$ is utilization. This is nonlinear — wait time barely rises from 50% to 70% utilization, then explodes approaching 100%. Running "full" doesn't mean slightly worse; it means qualitatively worse.
+- **What the Mechanism Is:** In an M/M/1-type queue, expected wait time scales with $
+ho/(1-
+ho)$, where $
+ho$ is utilization. This is nonlinear — wait time barely rises from 50% to 70% utilization, then explodes approaching 100%. Running "full" doesn't mean slightly worse; it means qualitatively worse.
 - **Why It Works:** Variability in arrival and service times compounds at high utilization because there's no slack to absorb it. At low utilization, a slow request just uses idle capacity. At high utilization, a slow request creates a queue that the next slow request stacks onto.
 - **How It Fails:** It fails when the environment is completely deterministic and synchronized (i.e., variance is zero). In a perfectly scheduled, deterministic pipeline, utilization can reach 100% with zero wait time.
 - **How to Implement It (Translations):**
@@ -525,9 +529,216 @@ This document has been restructured using the **From Abstraction to Implementati
 
 ---
 
-## Open leverage-mining targets
+## 23. Optimal Stopping Theory — the secretary problem, correctly scoped
 
-All six of the prioritized targets above are now entered. Remaining candidates for future rounds: zero-knowledge proofs (revealing that you know something without revealing the thing itself — a template for credentialing and trust-minimization), non-equilibrium thermodynamics and entropy production (why maintaining order anywhere requires exporting disorder somewhere else), Jane Jacobs's urban-systems observations (mixed-use density and "eyes on the street" as emergent safety mechanisms), and auction theory beyond Kyle/Myerson specifically (winner's curse, common-value vs. private-value bidding errors).
+**Move Classification:** Move 10: Exploration Before Commitment (Meta-Move)
+
+### The Five Questions (From Abstraction to Implementation)
+1. **What is the observable symptom?** Rejecting highly compatible options too early, or prematurely committing to a mediocre candidate because of fear of finding nothing better.
+2. **Why is it happening?** Sequential decision-making under uncertainty without a rational rule for transitioning from information-gathering (exploration) to selection (commitment).
+3. **What is the control knob?** Exploration/Exploitation boundary (cutoff ratio/criteria).
+4. **What is the implementation?** Reject the first 37% (1/e) of candidates when aiming *only* for the literal best; or for a "good option fast," transition much earlier (around $\sqrt{n}$).
+5. **What is the robustness test?** Run a simulation of sequential selection with varied cutoff sizes under both "best-only" and "expected rank" utility models to verify if the chosen cutoff maximizes the desired outcome.
+
+### Detailed Mechanism & Application
+- **What the Mechanism Is:** The standard secretary problem (Gilbert & Mosteller, 1966) requires rejecting the first 1/e (~37%) of candidates and then choosing the first one that is better than all previous candidates.
+- **Why It Works:** It balances the risk of picking too early (before knowing the quality distribution) against picking too late (when the best option has already been passed).
+- **How It Fails:** It fails under non-classical assumptions: if candidates can be recalled, if pool size is unknown, or if the objective is not "best-only" but finding a high-quality candidate quickly. In the latter case, the optimal cutoff is dramatically smaller ($\sim \sqrt{n}$).
+- **How to Implement It (Translations):**
+  - *Hiring, dating, apartment hunting:* Before invoking "the 37% rule," check which game is actually being played — "must have the literal best" (37%) or "good enough, soon" (a much shorter look-then-leap phase).
+  - *The caveat is the lesson:* This may be the single most commonly misapplied piece of popular math — a precise answer to a narrow question, repeated as if it answered a general one.
+- **How Far the Analogy Can Safely Extend:** This applies to any process where options are evaluated sequentially, choices are difficult or impossible to recall, and the quality of options is unknown in advance.
+- **Where the Analogy Breaks:** The analogy breaks when candidates can be recalled at zero cost, when the pool size is extremely small (such that statistical bounds don't apply), or when there is no resource or opportunity cost to continuous searching.
+
+---
+
+## 24. Cognitive Science — the testing effect: retrieval beats re-reading, but not on the test that matters least
+
+**Move Classification:** Move 8: Information Weighting / Signal Quality
+
+### The Five Questions (From Abstraction to Implementation)
+1. **What is the observable symptom?** High perceived learning competence and immediate recall but rapid forgetting and total failure to retrieve knowledge a week later.
+2. **Why is it happening?** Passive consumption (re-reading) generates processing fluency, which people misread as evidence of genuine learning — a documented "illusion of competence" driven by how easy something feels.
+3. **What is the control knob?** Active retrieval practice vs. passive exposure ratio.
+4. **What is the implementation?** Incorporating self-testing, flashcards, active blank-page recall, and spaced retrieval practice into learning protocols.
+5. **What is the robustness test?** Test the learner immediately and again after one week using passive vs. active methods to confirm that active retrieval yields significantly higher long-term retention.
+
+### Detailed Mechanism & Application
+- **What the Mechanism Is:** Roediger & Karpicke (2006) showed that repeated re-reading produces *higher* scores on an immediate test than repeated self-testing does, but one week later, repeated testing wins decisively — roughly 1.5x better recall. Active retrieval is a memory-strengthening event in its own right.
+- **Why It Works:** Retrieval forces active reconstruction of the memory trace, strengthening synaptic connections and building diagnostic retrieval paths.
+- **How It Fails:** The benefit shrinks, and can reverse into entrenching mistakes, when retrieval isn't paired with feedback — testing yourself and never correcting errors can concretely practice the wrong answer into stronger memory.
+- **How to Implement It (Translations):**
+  - *Personal learning:* If a study method feels fluent and easy, that feeling is exactly the signal shown to be unreliable — the discomfort of blank-page recall tracks the real thing better.
+  - *Organizations:* Rereading a postmortem together builds weaker institutional memory than cold-quizzing the team on it a month later.
+- **How Far the Analogy Can Safely Extend:** This applies to all forms of structured knowledge acquisition, cognitive training, and procedural skill development.
+- **Where the Analogy Breaks:** The analogy breaks when the goal is pure in-the-moment comprehension rather than long-term retention, or when the material is highly dynamic and changes constantly, making long-term recall irrelevant.
+
+---
+
+## 25. Behavioral Finance / Auction Theory — the winner's curse
+
+**Move Classification:** Move 8: Information Weighting / Signal Quality
+
+### The Five Questions (From Abstraction to Implementation)
+1. **What is the observable symptom?** Repeatedly winning highly competitive bids or acquisitions only to discover the actual value is far below the winning bid, leading to financial loss.
+2. **Why is it happening?** The selection event (winning) is biased: the winner is almost always the bidder who most overestimated the asset's true value.
+3. **What is the control knob?** Bid shading based on pool size/uncertainty (contingent thinking).
+4. **What is the implementation?** Shade bids down in proportion to the number of competitors and the uncertainty of the asset's valuation.
+5. **What is the robustness test?** Run bidding simulations with varying levels of valuation noise and count of participants to verify that the shaded bidding strategy prevents negative-utility wins.
+
+### Detailed Mechanism & Application
+- **What the Mechanism Is:** First documented in oil-lease bidding (Capen et al., 1971) and formalized by Thaler (1988), the winner's curse states that in common-value auctions, the winner is likely to pay more than the asset is worth unless they adjust for the fact that winning implies they had the most optimistic estimate.
+- **Why It Works:** Shading the bid down corrects for the optimistic bias inherent in being the maximum of a set of noisy estimates.
+- **How It Fails:** Extensions beyond literal auctions are real but contested in places — Roll's (1986) "hubris hypothesis," applying it to corporate acquisitions, is influential but some economists argue the same empirical pattern is equally consistent with ordinary zero-profit competitive markets, not systematic overbidding specifically.
+- **How to Implement It (Translations):**
+  - *Hiring, M&A, any competitive bidding:* Winning by a wide margin is itself evidence you were the most wrong, not the most right — a concrete, quantifiable reason to be *more* suspicious of an easy win, not more confident.
+  - *Sports labor markets:* Documented directly in NFL free agency and draft trades (Massey & Thaler's "Loser's Curse" work) — teams winning bidding wars for talent tend to have paid for the optimistic tail of scouting estimates, not the median one.
+- **How Far the Analogy Can Safely Extend:** This applies to any scenario involving resource acquisition under competitive bidding with uncertain underlying value, such as hiring contractors, commercial real estate, and project bids.
+- **Where the Analogy Breaks:** The analogy breaks in purely private-value situations where bidders value the asset strictly for personal, subjective utility, meaning there is no objective, shared "true" value to overestimate.
+
+---
+
+## 26. Cryptography — zero-knowledge proofs: verify without trusting, except where the trust just moved
+
+**Move Classification:** Move 4: Redundancy / Fault Containment
+
+### The Five Questions (From Abstraction to Implementation)
+1. **What is the observable symptom?** Repeated security breaches or identity theft because verifying eligibility or access requires transmitting and storing complete sensitive raw secrets.
+2. **Why is it happening?** Verifiers require proof of statements (e.g., identity, balance) but classic systems bundle proof with the raw underlying data, exposing it to leak.
+3. **What is the control knob?** Proof-to-secret isolation (Zero-knowledge property).
+4. **What is the implementation?** Using zero-knowledge protocols (completeness, soundness, zero-knowledge) to verify assertions without revealing raw attributes.
+5. **What is the robustness test?** Attempt to extract the underlying secret or generate a valid proof for a false statement using an adversarial simulator to confirm that completeness and soundness hold.
+
+### Detailed Mechanism & Application
+- **What the Mechanism Is:** Goldwasser, Micali & Rackoff (1989) proved that it is possible to prove a statement is true — "I know this password," "this transaction is valid" — while giving the verifier provably zero additional information beyond the fact of its truth.
+- **Why It Works:** Interactive or non-interactive mathematical protocols allow a prover to demonstrate knowledge of a mathematical secret (completeness and soundness) without revealing the secret itself.
+- **How It Fails:** "Zero-knowledge" describes what the verifier learns about the *secret*, not the total trust burden of the system. Many practical schemes (classic zk-SNARKs) require a one-time trusted setup to generate public parameters — if that setup is compromised, the guarantee can be undermined even though every individual proof still looks perfectly valid. Trust doesn't leave the system; it relocates to a single earlier event — the same shape of failure as Entry 18's static secret-sharing blind spot.
+- **How to Implement It (Translations):**
+  - *Credentialing / org design:* "Prove you're qualified without showing your whole file" is achievable in principle — always ask where the trust actually moved to, not whether it disappeared.
+  - *Verification generally:* Any system marketed as removing the need for trust deserves a second look specifically at its setup phase — that's almost always where the real assumption is hiding.
+- **How Far the Analogy Can Safely Extend:** This applies to privacy-preserving compliance, identity verification, multi-party computation, and decentralized financial systems.
+- **Where the Analogy Breaks:** The analogy breaks when the verifier must inspect or have full custody of the raw asset/data itself to perform actions, rather than just validating a static attribute or assertion about it.
+
+---
+
+## 27. Statistical Mechanics — dissipative structures: order is always paid for, never free
+
+**Move Classification:** Move 1: Slack / Headroom
+
+### The Five Questions (From Abstraction to Implementation)
+1. **What is the observable symptom?** Continuous, inevitable decay, chaos, and fragmentation in codebases, team operations, or personal schedules despite high motivation and effort to keep things tidy.
+2. **Why is it happening?** Treating the system as closed. In a closed system, entropy always increases. Order cannot be maintained without active energy input and a functional channel to export disorder.
+3. **What is the control knob?** Entropy-export rate / maintenance capacity.
+4. **What is the implementation?** Allocating dedicated capacity (slack/headroom) for cleanup, refactoring, archiving, and offloading obsolete tasks.
+5. **What is the robustness test?** Halt all scheduled cleanup/maintenance activities for a month and measure if system chaos (bugs, task drag, communication overhead) increases exponentially.
+
+### Detailed Mechanism & Application
+- **What the Mechanism Is:** Schrödinger (1944) observed that living organisms maintain internal order by "feeding on negative entropy." Prigogine (Nobel Prize, 1977) formalized this for open systems generally as *dissipative structures*: local order can increase indefinitely, but only in a system open to its environment, and only by exporting more entropy outward than would otherwise accumulate.
+- **Why It Works:** Active energy import paired with a functional waste-export pipeline keeps the local system's entropy low without violating the Second Law of Thermodynamics.
+- **How It Fails:** Treating "entropy always increases" as grounds for fatalism about decay in organizations or projects is a category error — it silently conflates closed-system reasoning with open systems that already have an export channel available (money, turnover, discarded drafts, waste heat). The real question is never "can I stop entropy" (no), it's "is my export channel for disorder actually functioning" — which is often no, and is fixable.
+- **How to Implement It (Translations):**
+  - *Organizations:* Maintenance, turnover, and cleanup aren't overhead subtracted from real work — they're the literal entropy-export mechanism that makes continued order possible. Starving them doesn't reduce entropy, it lets it accumulate internally until collapse.
+  - *Personal systems:* An inbox or codebase doesn't fail to "stay organized" through some personal failing — it fails because the export process (archiving, deleting, closing out) stopped running, and the fix is restarting the export, not trying harder at tidiness.
+- **How Far the Analogy Can Safely Extend:** This applies to any structured human or artificial system that is open to resources, information, or energy, including software architectures, corporate operational flows, and individual routines.
+- **Where the Analogy Breaks:** The analogy breaks in purely closed, static systems with zero interaction with the external environment, where thermodynamic decay is absolute and irreversible.
+
+---
+
+## 28. Queueing Theory, extended — Little's Law: an exact identity, not an estimate
+
+**Move Classification:** Move 2: Feedback / Observability
+
+### The Five Questions (From Abstraction to Implementation)
+1. **What is the observable symptom?** Work-in-progress (WIP) is exploding, deadlines are slipping, and the team is overwhelmed, but there is no clear mathematical framework to pinpoint the source of congestion.
+2. **Why is it happening?** Lack of visibility into the exact relationship between arrival rates, processing times, and work-in-progress inventory.
+3. **What is the control knob?** WIP inventory limit / Arrival rate limit ($\lambda$).
+4. **What is the implementation?** Applying the exact formula $L = \lambda W$ to restrict work in flight, balance incoming requests, and calculate cycle times.
+5. **What is the robustness test?** Measure long-run averages of arrival rate, cycle time, and WIP to verify that they satisfy the identity $L = \lambda W$ within a stable, steady-state process.
+
+### Detailed Mechanism & Application
+- **What the Mechanism Is:** John D. C. Little (1961), generalized further by Stidham (1974): $L = \lambda W$ — the average number of items in a system ($L$) equals the average arrival rate ($\lambda$) times the average time each item spends there ($W$).
+- **Why It Works:** Unlike nearly every other queueing formula, this holds with no assumptions about the distribution of arrivals or service times, the number of servers, or scheduling discipline — only that the system is stable and in steady state. It is an exact identity, not an estimate.
+- **How It Fails:** It fails because it relates three long-run averages, not a real-time prediction — it says nothing about variance or worst-case wait, and it silently stops applying if the system isn't actually in steady state (a backlog that's systematically growing has no stable $W$ to speak of).
+- **How to Implement It (Translations):**
+  - *Personal/org:* Knowing any two of (work in flight, arrival rate, time per item) gives you the third exactly — a genuine free lunch. An unexplained rising backlog almost always means one of the three quietly changed without the others catching up.
+  - *Connects to Entry 1:* Little's Law gives the exact relationship between the three queueing quantities; Entry 1's utilization curve explains why $W$ specifically blows up near capacity. Same system, exact identity plus the nonlinear warning about one of its terms.
+- **How Far the Analogy Can Safely Extend:** This applies to any operational flow where discrete items enter, spend time, and exit, including manufacturing lines, software pipelines, customer support systems, and individual task lists.
+- **Where the Analogy Breaks:** The analogy breaks when items can be created, destroyed, or merged inside the system without entering or exiting, violating conservation of flow, or when the system is highly volatile and never approaches steady-state averages.
+
+---
+
+## 29. Decision Science — the flaw of averages: plans built on average inputs are wrong on average
+
+**Move Classification:** Move 7: Risk Spreading / Bet-Hedging
+
+### The Five Questions (From Abstraction to Implementation)
+1. **What is the observable symptom?** Projects are routinely late, budgets are consistently blown, and business plans fail despite being built on "accurate average inputs."
+2. **Why is it happening?** Designing systems based on average values when the underlying relation is nonlinear (Jensen's Inequality), which systematically distorts the expected output.
+3. **What is the control knob?** Model input variance / Convexity analysis.
+4. **What is the implementation?** Modeling outcomes using probability distributions (Monte Carlo simulations) rather than static averages; accounting for asymmetric, nonlinear payoffs.
+5. **What is the robustness test?** Inject input variance around the mean into a plan to verify if the expected output remains stable or deviates severely, identifying hidden nonlinear risks.
+
+### Detailed Mechanism & Application
+- **What the Mechanism Is:** Sam Savage (2000, popularized 2009) named what mathematicians have called Jensen's Inequality for over a century: for any nonlinear function $F$, $F(\text{average input})$ does not equal $\text{average}(F(\text{input}))$. His illustration: a drunk staggering down the centerline of a highway has an average position of "on the road" — but on average, he's dead.
+- **Why It Works:** The direction of the error depends on convexity. Averaging a convex payoff (capped upside, rare catastrophic downside) understates risk; averaging a concave one (steady gains, rare large win) understates opportunity. It "cuts both ways," which is part of why it's easy to miss — naive averaging gives no built-in warning about which direction the error runs.
+- **How It Fails:** The underlying math is genuinely old (Jensen, 1906) wearing an accessible modern name, and it doesn't address the other major way averages mislead — small samples and fat-tailed distributions need separate fixes of their own.
+- **How to Implement It (Translations):**
+  - *Project planning:* "Average time to completion" fed into any schedule with dependencies systematically underestimates total delay, because delays compound through dependent steps while savings don't.
+  - *Risk management:* If a plan has one number for an uncertain input, ask whether the output is linear in that input — if not, the average output isn't the output of the average, and the gap is often the whole risk.
+- **How Far the Analogy Can Safely Extend:** This applies to any estimation, budgeting, or planning process under uncertainty with nonlinear outcome functions, including financial forecasting, load testing, and logistics.
+- **Where the Analogy Breaks:** The analogy breaks in purely linear systems where outputs are perfectly proportional to inputs (i.e., $F(x) = ax + b$), in which case the output of the average is exactly equal to the average of the outputs.
+
+---
+
+## 30. Modern Portfolio Theory — diversification is a correlation property, not a counting property
+
+**Move Classification:** Move 7: Risk Spreading / Bet-Hedging
+
+### The Five Questions (From Abstraction to Implementation)
+1. **What is the observable symptom?** Catastrophic concurrent failure of multiple "independent" backups, suppliers, or investments during a single system-wide crisis.
+2. **Why is it happening?** Confusing quantity of assets with genuine decorrelation. Having "many" assets that all move together in a crisis does not reduce systemic risk.
+3. **What is the control knob?** Inter-asset covariance/correlation.
+4. **What is the implementation?** Designing portfolios or redundant systems whose components have low or negative correlation, especially under high-stress conditions.
+5. **What is the robustness test?** Simulate a severe market/system shock (where correlation coefficients tend to spike toward 1.0) to verify if the diversified structure still mitigates ruin.
+
+### Detailed Mechanism & Application
+- **What the Mechanism Is:** Harry Markowitz (1952): portfolio risk depends on how assets move together, not on how many are held. A large portfolio of highly correlated assets isn't diversified in any way that matters; a small portfolio of genuinely uncorrelated assets can meaningfully reduce risk.
+- **Why It Works:** Decorrelation ensures that negative variances in some components are statistically offset by others, reducing overall portfolio volatility.
+- **How It Fails:** Correlations aren't stable — they're estimated from historical data and tend to spike toward 1 during exactly the crisis conditions diversification is meant to protect against, since panic makes previously-independent assets move together. The protection is weakest exactly when it's needed most. There's a technical trap alongside it: estimating $N(N-1)/2$ correlations from limited data makes the estimate itself unreliable, sometimes producing overconfident allocation into combinations that only look low-risk because of estimation noise.
+- **How to Implement It (Translations):**
+  - *Personal/organizational risk:* "Five suppliers" or "three income streams" isn't diversification if they all depend on the same shipping lane or the same client industry — correlation, not count, is the real question.
+  - *Caveat, applied directly:* The moment backups are most needed (a genuine crisis) is statistically the moment they're most likely to have quietly become correlated — worth stress-testing "would these actually move together in a bad year" rather than trusting a calm-market correlation estimate.
+- **How Far the Analogy Can Safely Extend:** This applies to risk management, system architecture redundancies, client bases, vendor relationships, and organizational structures.
+- **Where the Analogy Breaks:** The analogy breaks in environments with absolute correlation or zero risk, or when there is only one viable path/asset in the entire environment.
+
+---
+
+## 31. Urban Systems — Jane Jacobs's "eyes on the street," a real mechanism with genuinely mixed evidence
+
+**Move Classification:** Move 2: Feedback / Observability
+
+### The Five Questions (From Abstraction to Implementation)
+1. **What is the observable symptom?** High crime, safety concerns, and systemic social isolation in neighborhood developments despite massive spending on formal security and central policing.
+2. **Why is it happening?** Single-use zoning creates empty, unmonitored dead zones during specific hours, removing the natural, informal feedback loop of neighborhood surveillance.
+3. **What is the control knob** Mixed-use sidewalk density / foot traffic timing.
+4. **What is the implementation?** Designing spaces with diverse, overlapping local uses (residential, commercial, leisure) to maintain continuous, natural sidewalk activity.
+5. **What is the robustness test?** Compare crime rates and community activity on mixed-use blocks vs. single-use blocks under identical socioeconomic baselines to verify the presence of informal safety mechanisms.
+
+### Detailed Mechanism & Application
+- **What the Mechanism Is:** Jacobs (1961) argued that continuous, mixed-use foot traffic — driven by diverse land uses pulling people out at different hours — creates informal, decentralized surveillance ("eyes on the street") that top-down zoning can't replicate, and that this emergent order from local diversity beats centrally planned single-use zoning.
+- **Why It Works:** Active streets keep human observers naturally present and engaged, lowering the threshold for reporting or intervening in anomalies.
+- **How It Fails:** The empirical record is real but genuinely mixed. A University of Pennsylvania Law Review study of 200+ Los Angeles blocks found purely residential zoning had *lower* crime than either commercial-only or mixed-use zoning — the opposite ranking from the simple story. A Philadelphia study found mixed-use areas did see lower overall crime, but with a counterintuitive twist: crime concentrated near occupied businesses, not vacant lots — not the clean "more eyes nearby, less crime nearby" pattern the theory predicts at face value.
+- **How to Implement It (Translations):**
+  - *Organizations/product design:* "More visibility, more people around" isn't a monotonic safety or quality mechanism on its own — both real studies suggest the effect is genuine but conditional on specifics a simple density count doesn't capture.
+  - *The honest version:* Emergent order from diverse, overlapping local use is real and well-documented in successful cities — but "more mixing always means more safety" is exactly the clean rule the primary evidence doesn't actually support, worth knowing before citing it as settled.
+- **How Far the Analogy Can Safely Extend:** This applies to open-source software review ("given enough eyeballs, all bugs are shallow"), community moderation, workspace design, and decentralized information verification.
+- **Where the Analogy Breaks:** The analogy breaks when the observers suffer from the bystander effect (diffusion of responsibility) where high density reduces the individual motivation to intervene or report problems.
+
+---
+
+## Complete Integration of Leverage-Mining Targets
+
+All candidates from the initial open leverage-mining targets list have been successfully researched, structured, and integrated. The Universal Leverage Atlas is complete at 31 entries.
 
 ---
 
