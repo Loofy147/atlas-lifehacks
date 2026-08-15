@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
 Kaggle Competition Engine CLI
-Provides utilities to list active competitions, inspect details, download datasets, and submit predictions.
+Provides utilities to list active competitions, inspect details, download datasets, submit predictions, and check submission status.
 """
 
 import argparse
 import os
 import sys
+import zipfile
 from kaggle.api.kaggle_api_extended import KaggleApi
 
 def get_api():
@@ -43,14 +44,38 @@ def cmd_download(args):
     path = args.path or f"./data/{args.competition}"
     os.makedirs(path, exist_ok=True)
     print(f"Downloading files for '{args.competition}' to '{path}'...")
-    api.competition_download_files(args.competition, path=path, unzip=True)
+    api.competition_download_files(args.competition, path=path)
+    zip_path = os.path.join(path, f"{args.competition}.zip")
+    if os.path.exists(zip_path):
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(path)
+        os.remove(zip_path)
     print("Download completed successfully.")
 
 def cmd_submit(args):
     api = get_api()
     print(f"Submitting '{args.file}' to competition '{args.competition}' with message: '{args.message}'...")
-    api.competition_submit(file_name=args.file, message=args.message, competition=args.competition)
-    print("Submission transmitted successfully.")
+    try:
+        api.competition_submit(file_name=args.file, message=args.message, competition=args.competition)
+        print("Submission transmitted successfully.")
+    except Exception as e:
+        print(f"Submission status notice: {e}")
+        print("Checking recent submission status...")
+        cmd_submissions(args)
+
+def cmd_submissions(args):
+    api = get_api()
+    subs = api.competition_submissions(args.competition)
+    print(f"\nSubmissions history for competition '{args.competition}':")
+    print(f"{'Ref':<12} | {'FileName':<20} | {'Date':<25} | {'Status':<25} | {'Score':<10}")
+    print("-" * 100)
+    for sub in subs:
+        ref = str(getattr(sub, 'ref', getattr(sub, 'id', 'N/A')))
+        file_name = str(getattr(sub, 'fileName', getattr(sub, 'file_name', 'N/A')))
+        date = str(getattr(sub, 'date', 'N/A'))
+        status = str(getattr(sub, 'status', 'N/A'))
+        score = str(getattr(sub, 'publicScore', getattr(sub, 'public_score', 'N/A')))
+        print(f"{ref:<12} | {file_name:<20} | {date:<25} | {status:<25} | {score:<10}")
 
 def main():
     parser = argparse.ArgumentParser(description="Kaggle Competition Engine CLI")
@@ -64,7 +89,7 @@ def main():
 
     # Info
     p_info = subparsers.add_parser("info", help="Get competition files info")
-    p_info.add_argument("competition", type=str, help="Competition identifier (e.g. arc-prize-2026-arc-agi-3)")
+    p_info.add_argument("competition", type=str, help="Competition identifier")
     p_info.set_defaults(func=cmd_info)
 
     # Download
@@ -79,6 +104,11 @@ def main():
     p_sub.add_argument("file", type=str, help="Path to submission CSV/file")
     p_sub.add_argument("message", type=str, help="Submission description message")
     p_sub.set_defaults(func=cmd_submit)
+
+    # Submissions
+    p_subs = subparsers.add_parser("submissions", help="List submission history and status")
+    p_subs.add_argument("competition", type=str, help="Competition identifier")
+    p_subs.set_defaults(func=cmd_submissions)
 
     args = parser.parse_args()
     args.func(args)
